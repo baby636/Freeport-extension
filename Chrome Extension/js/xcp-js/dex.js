@@ -181,8 +181,6 @@ function btcpay_opreturn(add_from, add_to, sell_qty, order_txid_0, order_txid_1,
     
 }
 
-
-
 function cancelOrder_opreturn(add_from, order_txid, transfee, mnemonic, callback) {
     
     getutxos(add_from, mnemonic, transfee, function(total_utxo, satoshi_change){ 
@@ -245,3 +243,167 @@ function cancelOrder_opreturn(add_from, order_txid, transfee, mnemonic, callback
     
 }
 
+//order
+//FORMAT = '>QQQQHQ'
+//LENGTH = 8 + 8 + 8 + 8 + 2 + 8
+//ID = 10
+
+//dispenser
+//FORMAT = '>QQQQB'
+//LENGTH = 33
+//ID = 12
+//DISPENSE_ID = 13
+
+
+//data = message_type.pack(ID)
+//data += struct.pack(FORMAT, assetid, give_quantity, escrow_quantity, mainchainrate, status)
+
+
+//434e545250525459 - CNTRPRTY
+//0c - ID (12)
+//000001343609f4ea - Asset ID (GIVEKUDOS)
+//0000000000002328 - Give qty (9000)
+//0000000000002328 - Escrow qty (9000)
+//00000000000f4240 - Rate per unit in satoshis (1000000)
+//00 - status (open)
+
+function create_dispenser_data(give_asset, give_qty, escrow_qty, sats_per_asset, status){
+    var prefix = "434e5452505254590000000c"; //CNTRPRTY + transaction id (12)
+
+    var give_asset_id = assetid(give_asset); 
+    var give_asset_id_hex = padprefix(give_asset_id, 16);
+    
+    var give_qty_hex = padprefix((parseInt(give_qty)).toString(16), 16);
+    var escrow_qty_hex = padprefix((parseInt(escrow_qty)).toString(16), 16);
+    var sats_per_asset_hex = padprefix((parseInt(sats_per_asset)).toString(16), 16);
+    
+    if(status == "open"){
+        status = "00"
+    } else {
+        status = "0a"
+    }
+    
+    var data = prefix + give_asset_id_hex + give_qty_hex + escrow_qty_hex + sats_per_asset_hex + status
+
+    console.log(data)
+
+    return data
+}
+
+function createDispenser_opreturn(add_from, give_asset, give_asset_div, give_qty, escrow_qty, sats_per_asset, status, transfee, mnemonic, callback) {
+    
+    console.log(give_qty)
+    
+    if(give_asset_div == 1 || give_asset_div == "yes" ){
+        give_qty = Math.round(give_qty * 100000000);
+        console.log(give_qty)
+    } else {
+        give_qty = parseInt(give_qty);   
+    }
+    
+    var amountremaining = (parseFloat(transfee)*100000000)/100000000;
+        
+    getutxos(add_from, mnemonic, amountremaining, function(total_utxo, satoshi_change){ 
+            
+        var datachunk_unencoded = create_dispenser_data(give_asset, give_qty, escrow_qty, sats_per_asset, status)
+        
+        if (datachunk_unencoded != "error") {
+
+            if(total_utxo.length == 0){callback("error")}            
+
+            var datachunk_encoded = xcp_rc4(total_utxo[0].txid, datachunk_unencoded);
+            var scriptstring = "OP_RETURN "+datachunk_encoded;
+            
+            var feeSatoshis = parseInt(transfee * 100000000)
+
+            var tx = new bitcoinjs.TransactionBuilder(NETWORK);   
+
+            //inputs
+            for (i = 0; i < total_utxo.length; i++) {  
+                tx.addInput(total_utxo[i].txid, total_utxo[i].vout) 
+            }
+            console.log(total_utxo);
+
+            //outputs             
+            tx.addOutput(bitcoinjs.script.fromASM(scriptstring), 0)
+
+            console.log(satoshi_change);
+            if (satoshi_change > 5459) {
+                tx.addOutput(add_from, satoshi_change)
+            }
+
+            var privkey = getprivkey(add_from, mnemonic); 
+            var key = bitcoinjs.ECPair.fromWIF(privkey, NETWORK);
+            tx.sign(0, key);
+
+            var final_trans = tx.buildIncomplete().toHex();
+
+            callback(final_trans)  //push raw tx to the bitcoin network
+
+        } else {
+
+            var final_trans = "error";
+
+        }
+
+        console.log(final_trans);
+        
+    });
+    
+    
+}
+
+
+function createIssuance_opreturn(add_from, assetid, quantity, divisible, description, transfee, mnemonic, callback) {
+        
+    var amountremaining = (parseFloat(transfee)*100000000)/100000000;
+        
+    getutxos(add_from, mnemonic, amountremaining, function(total_utxo, satoshi_change){ 
+            
+        var datachunk_unencoded = create_issuance_data_opreturn(assetid, quantity, divisible, description);
+        
+        if (datachunk_unencoded != "error") {
+
+            if(total_utxo.length == 0){callback("error")}            
+
+            var datachunk_encoded = xcp_rc4(total_utxo[0].txid, datachunk_unencoded);
+            var scriptstring = "OP_RETURN "+datachunk_encoded;
+            
+            var feeSatoshis = parseInt(transfee * 100000000)
+
+            var tx = new bitcoinjs.TransactionBuilder(NETWORK);   
+
+            //inputs
+            for (i = 0; i < total_utxo.length; i++) {  
+                tx.addInput(total_utxo[i].txid, total_utxo[i].vout) 
+            }
+            console.log(total_utxo);
+
+            //outputs             
+            tx.addOutput(bitcoinjs.script.fromASM(scriptstring), 0)
+
+            console.log(satoshi_change);
+            if (satoshi_change > 5459) {
+                tx.addOutput(add_from, satoshi_change)
+            }
+
+            var privkey = getprivkey(add_from, mnemonic); 
+            var key = bitcoinjs.ECPair.fromWIF(privkey, NETWORK);
+            tx.sign(0, key);
+
+            var final_trans = tx.buildIncomplete().toHex();
+
+            callback(final_trans)  //push raw tx to the bitcoin network
+
+        } else {
+
+            var final_trans = "error";
+
+        }
+
+        console.log(final_trans);
+        
+    });
+    
+    
+}

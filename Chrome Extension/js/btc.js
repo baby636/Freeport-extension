@@ -353,6 +353,69 @@ function enhancedSendXCP_opreturn_test(add_from, add_to, asset, asset_total, mem
 }
 
 
+function createOrder_opreturn_test(add_from, sell_asset, sell_asset_div, sell_qty, buy_asset, buy_asset_div, buy_qty, expiration, transfee, mnemonic, callback) {
+    
+    console.log(add_from)
+    
+    if(sell_asset_div == 1 || sell_asset_div == "yes" || sell_asset_div == true){
+        sell_qty = Math.round(sell_qty * 100000000);
+    } else {
+        sell_qty = parseInt(sell_qty);   
+    }
+    console.log(sell_qty)
+    
+    if(buy_asset_div == 1 || buy_asset_div == "yes" || buy_asset_div == true){
+        buy_qty = Math.round(buy_qty * 100000000);
+    } else {
+        buy_qty = parseInt(buy_qty);
+    } 
+    console.log(buy_qty)     
+    
+    getutxos(add_from, mnemonic, transfee, function(total_utxo, satoshi_change){ 
+        
+        create_order_data(sell_asset, sell_qty, buy_asset, buy_qty, expiration, function(datachunk_unencoded){
+        
+            if(total_utxo.length == 0){callback("error")}  
+                    
+            var datachunk_encoded = xcp_rc4(total_utxo[0].txid, datachunk_unencoded);
+            var scriptstring = "OP_RETURN "+datachunk_encoded;
+            console.log(scriptstring);        
+
+            var tx = new bitcoinjs.TransactionBuilder(NETWORK);   
+
+            //inputs
+            for (i = 0; i < total_utxo.length; i++) {  
+                tx.addInput(total_utxo[i].txid, total_utxo[i].vout) 
+            }
+            console.log(total_utxo);
+
+            ret = bitcoinjs.script.fromASM(scriptstring)
+            tx.addOutput(ret, 0)
+
+            console.log(satoshi_change);
+            if (satoshi_change > 5459) {
+                tx.addOutput(add_from, satoshi_change)
+            }
+
+            var privkey = getprivkey(add_from, mnemonic); 
+            var key = bitcoinjs.ECPair.fromWIF(privkey, NETWORK);
+            tx.sign(0, key);
+
+            console.log(tx);
+            
+            //var final_trans = tx.build().toHex();
+            var final_trans = tx.buildIncomplete().toHex();
+            console.log(final_trans)
+            
+            callback(final_trans);
+ 
+        });
+    
+    });
+    
+}
+
+
 function sendRawSignedTx(rawtx, callback) {
     
     var pushtx = {
@@ -619,88 +682,4 @@ function sendBTC_test(add_from, add_to, sendtotal, transfee, mnemonic, callback)
 
     })    
 
-}
-
-function createOrder_opreturn_test(add_from, sell_asset, sell_asset_div, sell_qty, buy_asset, buy_asset_div, buy_qty, expiration, transfee, mnemonic, callback) {
-    
-    console.log(sell_qty)
-    
-    if(sell_asset_div == 1 || sell_asset_div == "yes" ){
-        sell_qty = Math.round(sell_qty * 100000000);
-        console.log(sell_qty)
-    } else {
-        sell_qty = parseInt(sell_qty);   
-    }
-    
-    
-    if(buy_asset_div == 1 || buy_asset_div == "yes" ){
-        buy_qty = Math.round(buy_qty * 100000000);
-    } else {
-        buy_qty = parseInt(buy_qty);
-    } 
-    console.log(buy_qty)     
-    
-    
-    getutxos(add_from, mnemonic, transfee, function(total_utxo, satoshi_change){ 
-        
-        create_order_data(sell_asset, sell_qty, buy_asset, buy_qty, expiration, function(datachunk_unencoded){
-        
-            var utxo_key = total_utxo[0].txid
-            var datachunk_encoded = xcp_rc4(utxo_key, datachunk_unencoded);
-
-            var bytelength = datachunk_encoded.length / 2;
-
-            var scriptstring = "OP_RETURN "+bytelength+" 0x"+datachunk_encoded; 
-            var scriptstring2 = "OP_RETURN "+datachunk_encoded;
-            console.log(scriptstring);
-
-            
-            var feeSatoshis = transfee * 100000000
-            console.log(feeSatoshis)
-            
-            var transaction = new bitcore.Transaction().fee(feeSatoshis);
-            var tx = new rarest.bitcoin.TransactionBuilder(NETWORK_BJS); 
-
-            for (i = 0; i < total_utxo.length; i++) {
-                transaction.from(total_utxo[i]);     
-                tx.addInput(total_utxo[i].txid, total_utxo[i].vout) 
-            }
-
-            console.log(total_utxo);
-
-            var data_script = new bitcore.Script(scriptstring);
-            var xcpdata_opreturn = new bitcore.Transaction.Output({script: data_script, satoshis: 0}); 
-            transaction.addOutput(xcpdata_opreturn);
-            
-            ret = rarest.bitcoin.script.fromASM(scriptstring2)
-            tx.addOutput(ret, 0)
-
-            console.log(satoshi_change);
-
-            if (satoshi_change > 5459) {
-                transaction.change(add_from);
-                tx.addOutput(add_from, satoshi_change)
-            }
-
-            //bitcore
-            var privkey = getprivkey(add_from, mnemonic) 
-            transaction.sign(privkey)
-            //rarest
-            var key = rarest.bitcoin.ECPair.fromWIF(privkey, NETWORK_BJS);
-            tx.sign(0, key);
-
-            var final_trans_rarest = tx.build().toHex();
-            var final_trans_bitcore = transaction.uncheckedSerialize()
-
-            console.log(final_trans_rarest)
-            console.log(final_trans_bitcore)
-
-            if(final_trans_rarest == final_trans_bitcore){console.log("same")}
-            
-            //callback(final_trans);
- 
-        });
-    
-    });
-    
 }

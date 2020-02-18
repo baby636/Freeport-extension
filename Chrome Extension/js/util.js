@@ -15,6 +15,8 @@ Object.size = function(obj) {
     return size;
 };
 
+
+
 Number.prototype.toTimeFormat = function () {
     var sec_num = parseInt(this, 10); // don't forget the second param
     var days   = Math.floor(sec_num / (3600*24));

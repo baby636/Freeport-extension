@@ -239,8 +239,11 @@ function initInventory(passphrase, address){
         } else {
             $("#header-address").append("<div id='header-address-twitter-link' style='display: inline-block; font-weight: normal; background-color: #1a97f0; margin-left: 8px; padding: 0 5px 0 5px; border-radius: 5px;'><i class='fa fa-twitter'></i></div>")
         }
+        //checkBandcamp()
     })
 
+    
+    
     thisBrowser.storage.local.set({'address': address}, function() {
 
         $(".jumbotron-tab-container").addClass("hide")
