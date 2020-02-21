@@ -19,16 +19,6 @@
        "css/*.*",
        "html/*.*"
    ],
-   "content_scripts": [{
-     "matches": ["https://*.digirare.com/*"],
-     "js": ["js/lib/jquery-3.4.1.min.js", "js/contentscript.js"],
-     "all_frames": true
-   },
-   {
-     "matches": ["https://*.bandcamp.com/*"],
-     "js": ["js/lib/jquery-3.4.1.min.js", "js/contentscript-bc.js"],
-     "all_frames": true
-   }],
    "permissions": [
         "storage",
         "https://*.digirare.com/",
