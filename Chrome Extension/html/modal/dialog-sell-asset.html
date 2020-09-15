@@ -1,0 +1,41 @@
+<div id="dialogSellAsset-container">   
+    <div id="dialogSellAsset-header" style="padding: 15px 0 30px 0; width: 100%" align="center">
+<!--   provide    image, alias, asset, balance -->
+        <div align="center" style="width: 100%;">
+            <div style="padding-bottom: 15px;" id="dialogSellAsset-image"></div>
+            <div style="padding-bottom: 0px;" class="dialogSellAsset-alias h4"></div>
+            <div style="padding-bottom: 30px; color: #868e96;">ID // <span class="dialogSellAsset-asset" style="color: #D3BDB0;"></span></div>
+        </div>
+        
+        <div style="width: 100%">Available:</div>
+        <div class="h4" style="width: 100%; padding-top: 15px;"><span id="dialogSellAsset-balance">0</span></div>
+    </div>
+    <div id="dialogSellAsset-body">
+        <form>
+            <fieldset class="form-group">     
+                
+                <div class="row no-gutters">
+               
+                <div align="center" class="col" style="padding-bottom: 10px">
+                    <label for="dialogSellAsset-amount"><div style="font-weight: bold; display: inline-block; font-size: 16px;">Amount to Sell</div></label>
+                    <input id="dialogSellAsset-amount" type="text" class="form-control dialogSellAsset-keyup" style="text-align: center; width: 160px;" autocomplete="off">
+                </div>
+                      </div>
+                
+                <div class="row no-gutters">
+
+                <div align="center" class="col" style="padding-bottom: 10px">
+                    <label for="dialogSellAsset-price"><div style="font-weight: bold; display: inline-block; font-size: 16px;">Price Each in BTC</div></label>
+                    <input id="dialogSellAsset-price" type="text" class="form-control dialogSellAsset-keyup" style="text-align: center; width: 160px;" autocomplete="off" placeholder="0.00000001">
+                </div>
+                    <!--   get amount, price -->
+                    </div>
+            </fieldset>
+          
+        </form>      
+        <div style="padding: 20px 0 10px 0;">
+            <div align="center">Current fee: <b><span class="dialog-transfee"></span> BTC</b></div>
+            <div align="center" class="dialog-txfeebutton"></div> 
+        </div>       
+    </div> 
+</div>

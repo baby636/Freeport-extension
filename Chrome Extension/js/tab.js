@@ -3,6 +3,9 @@
 // })
 
 
+
+
+
 $( document ).ready(function() {  
     
    
@@ -98,6 +101,21 @@ $( document ).ready(function() {
         })
 
     }) 
+    
+    $("#page-container-collect-assetview").on('click', 'button.asset-sell-button', function(){ 
+    //sellAssetModal(asset_image, asset_alias, asset, asset_divisible, asset_qty)
+        var assetname = $(this).data("asset")
+        var assetimage = $(this).data("image")
+        var assetdivisible = $(this).data("divisible")
+        var assetqty = $(this).data("qty")
+        var alias = $(this).data("alias")
+
+        chrome.storage.local.get(['fee_custom'], function(result) {
+            sellAssetModal(assetimage, alias, assetname, assetdivisible, assetqty, result.fee_custom)
+        })
+        
+    }) 
+    
     
     $("#page-container-collect-assetview").on('click', 'button.asset-tweet-who-button', function(){ 
         var asset = $(this).data("asset")
